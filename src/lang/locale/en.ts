@@ -28,5 +28,6 @@ export default {
   DEFAULT_LOCATION: 'Default location for saving code files',
   CURRENT_FOLDER: 'Current folder',
   ROOT_FOLDER: 'Root folder',
+  DEFAULT_PATH: 'Attachment folder',
   CUSTOM_PATH: 'Custom path'
 };

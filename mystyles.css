@@ -1,3 +1,7 @@
+.monaco-editor {
+    outline: none; /* 去除外边框（聚焦时的边框） */
+}
+
 .create-code-file-modal{
     display: flex;
     align-items : center;

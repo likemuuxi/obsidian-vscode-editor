@@ -26,8 +26,9 @@ export class CodeFilesSettingsTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName(t('DEFAULT_LOCATION'))
 			.addDropdown(async (dropdown) => {
-				dropdown.addOption('current', t('CURRENT_FOLDER'));
 				dropdown.addOption('root', t('ROOT_FOLDER'));
+				dropdown.addOption('current', t('CURRENT_FOLDER'));
+				dropdown.addOption('default', t('DEFAULT_PATH'));
 				dropdown.addOption('custom', t('CUSTOM_PATH'));
 				dropdown.setValue(this.plugin.settings.defaultLocation || 'current');
 				dropdown.onChange(async (value) => {

@@ -1,4 +1,4 @@
-import { Notice, Plugin } from "obsidian";
+import { Notice, Plugin, TFolder } from "obsidian";
 import { DEFAULT_SETTINGS, EditorSettings } from "./common";
 import { CodeEditorView } from "./codeEditorView";
 import { CreateCodeFileModal } from "./createCodeFileModal";
@@ -24,6 +24,8 @@ export default class CodeFilesPlugin extends Plugin {
 	settings: EditorSettings;
 
 	observer: MutationObserver;
+
+	private assertFolder : TFolder;
 
 	public hover: {
 		linkText: string;
@@ -57,66 +59,21 @@ export default class CodeFilesPlugin extends Plugin {
 						.setTitle(t("CREATE_CODE"))
 						.setIcon("file-json")
 						.onClick(async () => {
-							new CreateCodeFileModal(this, file).open();
+							new CreateCodeFileModal(this, this.assertFolder).open();
 						});
 				});
 			})
 		);
 
 		this.addRibbonIcon('file-json', t("CREATE_CODE"), async () => {
-			const activeFile = this.app.workspace.getActiveFile();
-			let location;
-			
-			switch (this.settings.defaultLocation) {
-				case 'root':
-					location = this.app.vault.getRoot();
-					break;
-				case 'custom':
-					const customPath = this.settings.customPath.replace(/\/$/, '');
-					let customFolder = this.app.vault.getAbstractFileByPath(customPath);
-					if (!customFolder) {
-						try {
-							customFolder = await this.app.vault.createFolder(customPath);
-						} catch (e) {
-							customFolder = this.app.vault.getRoot();
-						}
-					}
-					location = customFolder;
-					break;
-				default: // 'current'
-					location = activeFile?.parent;
-			}
-			
-			new CreateCodeFileModal(this, location || undefined).open();
+			new CreateCodeFileModal(this, this.assertFolder).open();
 		});
 
 		this.addCommand({
 			id: 'create',
 			name: 'Create new code file',
 			callback: async () => {
-				const activeFile = this.app.workspace.getActiveFile();
-				let location;
-				
-				switch (this.settings.defaultLocation) {
-					case 'root':
-						location = this.app.vault.getRoot();
-						break;
-					case 'custom':
-						const customPath = this.settings.customPath.replace(/\/$/, '');
-						let customFolder = this.app.vault.getAbstractFileByPath(customPath);
-						if (!customFolder) {
-							try {
-								customFolder = await this.app.vault.createFolder(customPath);
-							} catch (e) {
-								customFolder = this.app.vault.getRoot();
-							}
-						}
-						location = customFolder;
-						break;
-					default: // 'current'
-						location = activeFile?.parent;
-				}
-				new CreateCodeFileModal(this, location || undefined).open();
+				new CreateCodeFileModal(this, this.assertFolder).open();
 			}
 		});
 
@@ -127,6 +84,17 @@ export default class CodeFilesPlugin extends Plugin {
 				FenceEditModal.openOnCurrentCode(this);
 			}
 		});
+
+		this.registerEvent(
+			this.app.workspace.on('active-leaf-change', async (leaf) => {
+				if (this.settings.defaultLocation == 'current') {
+					const activeFile = this.app.workspace.getActiveFile();
+					if(activeFile?.parent instanceof TFolder) {
+						this.assertFolder = activeFile?.parent;
+					}
+				}
+			})
+		);
 
 		this.registerEvent(
 			this.app.workspace.on("editor-menu", (menu) => {
@@ -224,14 +192,51 @@ export default class CodeFilesPlugin extends Plugin {
 		this.observer.disconnect();
 	}
 
-
-
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		this.updateAssertFolder();
 	}
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+		this.updateAssertFolder();
 	}
 
+	updateAssertFolder() {
+		const activeFile = this.app.workspace.getActiveFile();
+		let folder: TFolder = this.app.vault.getRoot(); // 默认 fallback 值
+	
+		switch (this.settings.defaultLocation) {
+			case 'root':
+				folder = this.app.vault.getRoot();
+				break;
+	
+			case 'default': {
+				const folderPath = (this.app.vault as any).getConfig("attachmentFolderPath");
+				const defaultFolder = this.app.vault.getAbstractFileByPath(folderPath);
+				if (defaultFolder instanceof TFolder) {
+					folder = defaultFolder;
+				}
+				break;
+			}
+	
+			case 'custom': {
+				const customPath = this.settings.customPath.replace(/\/$/, '');
+				const customFolder = this.app.vault.getAbstractFileByPath(customPath);
+				if (customFolder instanceof TFolder) {
+					folder = customFolder;
+				}
+				break;
+			}
+	
+			case 'current':
+				if (activeFile?.parent instanceof TFolder) {
+					folder = activeFile.parent;
+				}
+				break;
+		}
+	
+		this.assertFolder = folder;
+	}
+	
 }

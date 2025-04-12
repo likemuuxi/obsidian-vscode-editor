@@ -27,5 +27,6 @@ export default {
   DEFAULT_LOCATION: '代码文件默认保存位置',
   CURRENT_FOLDER: '当前文件夹',
   ROOT_FOLDER: '根目录',
+  DEFAULT_PATH: '附件文件夹',
   CUSTOM_PATH: '自定义'
 };

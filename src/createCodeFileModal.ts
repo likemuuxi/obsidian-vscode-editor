@@ -4,19 +4,18 @@ import {
 	Modal,
 	normalizePath,
 	Notice,
-	TAbstractFile,
+	TFolder,
 	TextComponent,
 	TFile,
-	TFolder
 } from "obsidian";
 import CodeFilesPlugin from "./main";
 
 export class CreateCodeFileModal extends Modal {
 	fileName = "My code file";
 	fileExtension = this.plugin.settings.extensions[0];
-	parent: TAbstractFile;
+	parent: TFolder;
 
-	constructor(private plugin: CodeFilesPlugin, parent?: TAbstractFile) {
+	constructor(private plugin: CodeFilesPlugin, parent?: TFolder) {
 		super(plugin.app);
 		this.parent = parent ?? this.plugin.app.vault.getRoot();
 	}
