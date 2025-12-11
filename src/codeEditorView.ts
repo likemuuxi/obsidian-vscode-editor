@@ -101,9 +101,22 @@ export class CodeEditorView extends TextFileView {
 			['[', 'editor.action.outdentLines'],
 			[']', 'editor.action.indentLines'],
 			['d', 'editor.action.copyLinesDownAction'],
+			['c', 'editor.action.clipboardCopyAction'],
+			['v', 'editor.action.clipboardPasteAction'],
+			['x', 'editor.action.clipboardCutAction'],
 		]);
+		if (!this.containerEl.contains(event.target as Node)) {
+			return;
+		}
 		if (event.ctrlKey) {
-			const triggerName = ctrlMap.get(event.key);
+			const key = event.key.toLowerCase();
+			if (key === 'v') {
+				event.preventDefault();
+				event.stopPropagation();
+				void this.handlePaste();
+				return;
+			}
+			const triggerName = ctrlMap.get(key);
 			if (triggerName) {
 				this.monacoEditor.trigger('', triggerName, null);
 			}
@@ -123,6 +136,28 @@ export class CodeEditorView extends TextFileView {
 
 	}
 
+	private handlePaste = async () => {
+		try {
+			const text = await navigator.clipboard.readText();
+			if (!text) {
+				this.monacoEditor.trigger('', 'editor.action.clipboardPasteAction', null);
+				return;
+			}
+			const selections = this.monacoEditor.getSelections();
+			if (selections) {
+				const edits = selections.map((selection) => ({
+					range: selection,
+					text,
+					forceMoveMarkers: true,
+				}));
+				this.monacoEditor.executeEdits('obsidian-vscode-editor', edits);
+			}
+		} catch (e) {
+			// fallback to monaco default paste if clipboard API is unavailable
+			this.monacoEditor.trigger('', 'editor.action.clipboardPasteAction', null);
+		}
+	}
+
 	private mousewheelHandle = (event: WheelEvent) => {
 		if (event.ctrlKey) {
 			let delta = 0 < event.deltaY ? 1 : -1;
@@ -136,8 +171,4 @@ export class CodeEditorView extends TextFileView {
 			event.stopPropagation();
 		}
 	}
-
-
-
-
 }

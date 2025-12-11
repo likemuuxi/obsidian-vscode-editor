@@ -11,6 +11,14 @@ export interface EditorSettings {
 	syntaxValidation: boolean;
 	themeColor: string;
 	fontSize: number;
+	// VS Code integration
+	ribbonIcon: boolean;
+	ribbonCommandUsesCode: boolean;
+	showFileContextMenuItem: boolean;
+	executeTemplate: string;
+	openFile: boolean;
+	urlProtocol: string;
+	workspacePath: string;
 }
 
 export const DEFAULT_SETTINGS: EditorSettings = {
@@ -25,6 +33,13 @@ export const DEFAULT_SETTINGS: EditorSettings = {
 	syntaxValidation: true,
 	themeColor: "AUTO",
 	fontSize: 16,
+	ribbonIcon: true,
+	ribbonCommandUsesCode: true,
+	showFileContextMenuItem: true,
+	executeTemplate: 'code "{{vaultpath}}" "{{vaultpath}}/{{filepath}}"',
+	openFile: true,
+	urlProtocol: "vscode",
+	workspacePath: "{{vaultpath}}",
 }
 
 

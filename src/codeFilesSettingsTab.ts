@@ -1,5 +1,6 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import CodeFilesPlugin from "./main";
+import { DEFAULT_SETTINGS } from "./common";
 import { t } from 'src/lang/helpers';
 
 
@@ -133,6 +134,86 @@ export class CodeFilesSettingsTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.folding)
 				.onChange(async (value) => {
 					this.plugin.settings.folding = value;
+					await this.plugin.saveSettings();
+				}));
+
+		containerEl.createEl('h2', { text: 'Open in VS Code' });
+
+		new Setting(containerEl)
+			.setName("Display Ribbon Icon")
+			.setDesc("Toggle this OFF if you want to hide the VS Code ribbon icon.")
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.ribbonIcon)
+				.onChange(async (value) => {
+					this.plugin.settings.ribbonIcon = value;
+					await this.plugin.saveSettings();
+					this.plugin.refreshIconRibbon();
+				}));
+
+		new Setting(containerEl)
+			.setName("Ribbon uses 'code' command")
+			.setDesc("If OFF, the ribbon icon will use vscode:// URL instead.")
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.ribbonCommandUsesCode)
+				.onChange(async (value) => {
+					this.plugin.settings.ribbonCommandUsesCode = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Show "Open in VS Code" in file menu')
+			.setDesc("Show context menu option for files/folders.")
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.showFileContextMenuItem)
+				.onChange(async (value) => {
+					this.plugin.settings.showFileContextMenuItem = value;
+					await this.plugin.saveSettings();
+				}));
+
+		containerEl.createEl('h3', { text: "Open via 'code' CLI" });
+
+		new Setting(containerEl)
+			.setName("Template for 'code' command")
+			.setDesc("Use variables: {{vaultpath}} {{filepath}} {{folderpath}} {{line}} {{ch}}")
+			.addText(text => text
+				.setPlaceholder(DEFAULT_SETTINGS.executeTemplate)
+				.setValue(this.plugin.settings.executeTemplate || DEFAULT_SETTINGS.executeTemplate)
+				.onChange(async (value) => {
+					this.plugin.settings.executeTemplate = value.trim() || DEFAULT_SETTINGS.executeTemplate;
+					await this.plugin.saveSettings();
+				}));
+
+		containerEl.createEl('h3', { text: "Open via vscode:// URL" });
+
+		new Setting(containerEl)
+			.setName("Open current file")
+			.setDesc("If OFF, only open the vault/workspace.")
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.openFile)
+				.onChange(async (value) => {
+					this.plugin.settings.openFile = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName("Workspace path")
+			.setDesc("Template for workspace; defaults to {{vaultpath}} or a .code-workspace path.")
+			.addText(text => text
+				.setPlaceholder(DEFAULT_SETTINGS.workspacePath)
+				.setValue(this.plugin.settings.workspacePath || DEFAULT_SETTINGS.workspacePath)
+				.onChange(async (value) => {
+					this.plugin.settings.workspacePath = value.trim() || DEFAULT_SETTINGS.workspacePath;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName("URL protocol")
+			.setDesc("Override vscode:// (e.g. vscode-insiders, vscodium).")
+			.addText(text => text
+				.setPlaceholder(DEFAULT_SETTINGS.urlProtocol)
+				.setValue(this.plugin.settings.urlProtocol || DEFAULT_SETTINGS.urlProtocol)
+				.onChange(async (value) => {
+					this.plugin.settings.urlProtocol = value.trim() || DEFAULT_SETTINGS.urlProtocol;
 					await this.plugin.saveSettings();
 				}));
 	}
