@@ -299,6 +299,16 @@ export default class CodeFilesPlugin extends Plugin {
 		}
 	}
 
+	private replaceTokens(template: string, replacements: Record<string, string>): string {
+		let result = template;
+		for (const token in replacements) {
+			if (Object.prototype.hasOwnProperty.call(replacements, token)) {
+				result = result.split(token).join(replacements[token]);
+			}
+		}
+		return result;
+	}
+
 	openVSCode(file: TAbstractFile | null = this.app.workspace.getActiveFile()): void {
 		if (!(this.app.vault.adapter instanceof FileSystemAdapter)) {
 			return;
@@ -315,12 +325,13 @@ export default class CodeFilesPlugin extends Plugin {
 		const ch = (cursor?.ch ?? 0) + 1;
 
 		let command = executeTemplate.trim() === "" ? DEFAULT_SETTINGS.executeTemplate : executeTemplate;
-		command = command
-			.replaceAll("{{vaultpath}}", vaultPath)
-			.replaceAll("{{filepath}}", filePath)
-			.replaceAll("{{folderpath}}", folderPath)
-			.replaceAll("{{line}}", line.toString())
-			.replaceAll("{{ch}}", ch.toString());
+		command = this.replaceTokens(command, {
+			"{{vaultpath}}": vaultPath,
+			"{{filepath}}": filePath,
+			"{{folderpath}}": folderPath,
+			"{{line}}": line.toString(),
+			"{{ch}}": ch.toString(),
+		});
 
 		exec(command, error => {
 			if (error) {
@@ -344,7 +355,9 @@ export default class CodeFilesPlugin extends Plugin {
 			url += `/${filePath}`;
 
 			// First open the workspace to bring the correct window to the front...
-			const workspacePath = this.settings.workspacePath.replaceAll("{{vaultpath}}", path);
+			const workspacePath = this.replaceTokens(this.settings.workspacePath, {
+				"{{vaultpath}}": path,
+			});
 			window.open(`${this.settings.urlProtocol}://file/${workspacePath}`);
 
 			// ...then open the file shortly after.
